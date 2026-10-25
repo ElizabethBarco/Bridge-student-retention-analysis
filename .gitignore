@@ -3,6 +3,7 @@
 !.env.example
 data/
 __pycache__/
+impact_2026.csv
 .venv/
 *.db
 *.sqlite
