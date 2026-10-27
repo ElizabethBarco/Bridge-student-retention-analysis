@@ -94,7 +94,7 @@ import time
 # Collect attendance from January 1 through today
 start_date = date(2026, 1, 1)
 end_date = date.today()
-
+"""
 all_records = []
 current_date = start_date
 
@@ -147,6 +147,7 @@ while current_date <= end_date:
 
     current_date += timedelta(days=1)
     time.sleep(0.1)
+  
 
 # Create DataFrame
 df = pd.DataFrame(all_records)
@@ -165,7 +166,7 @@ df["check_in_date"] = pd.to_datetime(
 
 # Save locally
 df.to_csv("impact_2026.csv", index=False)
-
+"""
 print("\n--- 2026 IMPACT SUMMARY ---")
 print("Attendance records:", len(df))
 print("Unique students:", df["student_id"].nunique())
@@ -209,3 +210,93 @@ print(
     .value_counts()
     .head(10)
 )
+
+
+#Total Repairs 
+
+def analyze_device_repairs(base_url, app_id):
+    url = f"{base_url.rstrip('/')}/DeviceRepair"
+
+    headers = {
+        "api_key": app_id
+    }
+
+    response = requests.get(
+        url,
+        headers=headers,
+        params={"limit": 1000},
+        timeout=30
+    )
+    response.raise_for_status()
+
+    data = response.json()
+
+    if isinstance(data, list):
+        repairs = data
+    elif isinstance(data, dict):
+        repairs = data.get("data", [])
+    else:
+        raise ValueError("Unexpected API response format")
+
+    df = pd.DataFrame(repairs)
+
+    print("Total repair records:", len(df))
+
+    if df.empty:
+        return df
+
+    print("\nRepair statuses:")
+    print(df["status"].value_counts(dropna=False))
+
+    completed = df[
+        df["status"].fillna("").str.strip().str.lower()
+        == "completed"
+    ].copy()
+
+    print("\nCompleted repair records:", len(completed))
+
+    return completed
+
+repair_analysis = analyze_device_repairs(BASE_URL, APP_ID)
+print(repair_analysis)
+
+#Total Tech Support
+def analyze_guest_visits(base_url, api_id):
+    url = f"{base_url.rstrip('/')}/GuestVisit"
+
+    headers = {
+        "api_key": api_id
+    }
+
+    response = requests.get(
+        url,
+        headers=headers,
+        params={"limit": 1000},
+        timeout=30
+    )
+
+    response.raise_for_status()
+    data = response.json()
+
+    if isinstance(data, list):
+        visits = data
+    elif isinstance(data, dict):
+        visits = data.get("data", [])
+    else:
+        raise ValueError("Unexpected API response")
+
+    df = pd.DataFrame(visits)
+
+    print("\n===== GUEST VISIT ANALYSIS =====")
+    print("Total guest visit records:", len(df))
+
+    if df.empty:
+        return df
+
+    print("\nServices provided:")
+    print(df["service_provided"].value_counts(dropna=False))
+    print(df.columns)
+    return df
+
+guest_visit_analysis = analyze_guest_visits(BASE_URL, APP_ID)
+print(guest_visit_analysis)
